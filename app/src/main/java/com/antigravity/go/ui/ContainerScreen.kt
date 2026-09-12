@@ -80,6 +80,7 @@ import com.antigravity.go.web.WebContainerState
 fun ContainerScreen(
     initialUrl: String,
     onFileChooser: (ValueCallback<Array<Uri>>?, WebChromeClient.FileChooserParams?) -> Boolean,
+    onRequestAccountPicker: (onSelected: (String) -> Unit) -> Unit,
     onExitApp: () -> Unit
 ) {
     val context = LocalContext.current
@@ -98,6 +99,13 @@ fun ContainerScreen(
         mutableStateOf(sharedPrefs.getInt(WebContainerState.KEY_ZOOM_PERCENT, 100))
     }
 
+    var selectedGoogleAccount by remember {
+        mutableStateOf(sharedPrefs.getString(WebContainerState.KEY_SELECTED_ACCOUNT, null))
+    }
+    val hasPromptedAccount = remember {
+        sharedPrefs.getBoolean(WebContainerState.KEY_PROMPTED_ACCOUNT, false)
+    }
+
     var isLoading by remember { mutableStateOf(true) }
     var progress by remember { mutableStateOf(0f) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -108,6 +116,34 @@ fun ContainerScreen(
 
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
+
+    // Helper to log in with selected account
+    fun navigateToGoogleAccount(accountEmail: String) {
+        selectedGoogleAccount = accountEmail
+        sharedPrefs.edit()
+            .putString(WebContainerState.KEY_SELECTED_ACCOUNT, accountEmail)
+            .apply()
+
+        try {
+            val encodedEmail = java.net.URLEncoder.encode(accountEmail, "UTF-8")
+            val encodedContinue = java.net.URLEncoder.encode(WebContainerState.DEFAULT_URL, "UTF-8")
+            val loginUrl = "https://accounts.google.com/AccountChooser?Email=$encodedEmail&continue=$encodedContinue"
+            webViewInstance?.loadUrl(loginUrl)
+            Toast.makeText(context, "Signing in as $accountEmail...", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            webViewInstance?.loadUrl(WebContainerState.DEFAULT_URL)
+        }
+    }
+
+    // Auto prompt on first launch if not yet selected
+    LaunchedEffect(Unit) {
+        if (!hasPromptedAccount && selectedGoogleAccount == null) {
+            sharedPrefs.edit().putBoolean(WebContainerState.KEY_PROMPTED_ACCOUNT, true).apply()
+            onRequestAccountPicker { email ->
+                navigateToGoogleAccount(email)
+            }
+        }
+    }
 
     // Back handling: navigates web history or double-press to exit
     BackHandler {
@@ -439,6 +475,19 @@ fun ContainerScreen(
                             }
                         )
 
+                        // Google Account Picker
+                        QuickMenuButton(
+                            label = "👤",
+                            sublabel = if (selectedGoogleAccount != null) "Account" else "Login",
+                            isActive = selectedGoogleAccount != null,
+                            onClick = {
+                                showQuickMenu = false
+                                onRequestAccountPicker { email ->
+                                    navigateToGoogleAccount(email)
+                                }
+                            }
+                        )
+
                         // Settings / URL Dialog
                         QuickMenuButton(
                             label = "⚙",
@@ -490,6 +539,7 @@ fun ContainerScreen(
     if (showSettingsDialog) {
         SettingsDialog(
             currentUrl = currentUrl,
+            selectedAccount = selectedGoogleAccount,
             onDismiss = { showSettingsDialog = false },
             onSaveUrl = { newUrl ->
                 currentUrl = newUrl
@@ -501,6 +551,11 @@ fun ContainerScreen(
                 CookieManager.getInstance().removeAllCookies(null)
                 webViewInstance?.reload()
                 Toast.makeText(context, "Cache and cookies cleared", Toast.LENGTH_SHORT).show()
+            },
+            onPromptAccountPicker = {
+                onRequestAccountPicker { email ->
+                    navigateToGoogleAccount(email)
+                }
             }
         )
     }

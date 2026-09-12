@@ -28,9 +28,11 @@ import com.antigravity.go.web.WebContainerState
 @Composable
 fun SettingsDialog(
     currentUrl: String,
+    selectedAccount: String?,
     onDismiss: () -> Unit,
     onSaveUrl: (String) -> Unit,
-    onClearCache: () -> Unit
+    onClearCache: () -> Unit,
+    onPromptAccountPicker: () -> Unit
 ) {
     var urlInput by remember { mutableStateOf(currentUrl) }
 
@@ -77,6 +79,32 @@ fun SettingsDialog(
                         onClick = { urlInput = "http://10.0.2.2:8080" },
                         label = { Text("Emulator") }
                     )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Google Account",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                if (!selectedAccount.isNullOrBlank()) {
+                    Text(
+                        text = "Current: $selectedAccount",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        onDismiss()
+                        onPromptAccountPicker()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (selectedAccount.isNullOrBlank()) "Sign In with Device Account" else "Switch Device Account")
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

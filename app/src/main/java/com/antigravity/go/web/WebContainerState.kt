@@ -20,5 +20,7 @@ data class WebContainerState(
         const val KEY_DESKTOP_MODE = "saved_desktop_mode"
         const val KEY_DEV_BAR = "saved_dev_bar"
         const val KEY_ZOOM_PERCENT = "saved_zoom_percent"
+        const val KEY_SELECTED_ACCOUNT = "selected_google_account"
+        const val KEY_PROMPTED_ACCOUNT = "has_prompted_account"
     }
 }
