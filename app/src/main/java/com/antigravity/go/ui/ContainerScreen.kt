@@ -2,6 +2,7 @@ package com.antigravity.go.ui
 
 import android.app.DownloadManager
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.view.ViewGroup
@@ -148,6 +149,8 @@ fun ContainerScreen(
                         javaScriptEnabled = true
                         domStorageEnabled = true
                         databaseEnabled = true
+                        javaScriptCanOpenWindowsAutomatically = true
+                        setSupportMultipleWindows(true)
                         setSupportZoom(true)
                         builtInZoomControls = true
                         displayZoomControls = false
@@ -278,18 +281,37 @@ fun ContainerScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Button(
                                 onClick = {
                                     errorMessage = null
-                                    webViewInstance?.reload()
-                                }
+                                    val target = webViewInstance?.url ?: currentUrl
+                                    webViewInstance?.loadUrl(target)
+                                },
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text("Retry")
                             }
                             Button(
-                                onClick = { showSettingsDialog = true }
+                                onClick = {
+                                    val target = webViewInstance?.url ?: currentUrl
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(target))
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.weight(1.4f)
+                            ) {
+                                Text("Open in Browser")
+                            }
+                            Button(
+                                onClick = { showSettingsDialog = true },
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text("Settings")
                             }
@@ -388,6 +410,32 @@ fun ContainerScreen(
                             onClick = {
                                 isDevBarVisible = !isDevBarVisible
                                 sharedPrefs.edit().putBoolean(WebContainerState.KEY_DEV_BAR, isDevBarVisible).apply()
+                            }
+                        )
+
+                        // Home Button
+                        QuickMenuButton(
+                            label = "⌂",
+                            sublabel = "Home",
+                            onClick = {
+                                showQuickMenu = false
+                                webViewInstance?.loadUrl(currentUrl)
+                            }
+                        )
+
+                        // Open in Browser
+                        QuickMenuButton(
+                            label = "↗",
+                            sublabel = "Browser",
+                            onClick = {
+                                showQuickMenu = false
+                                val urlToOpen = webViewInstance?.url ?: currentUrl
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         )
 
