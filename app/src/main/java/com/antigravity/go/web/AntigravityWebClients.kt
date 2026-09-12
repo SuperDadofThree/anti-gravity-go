@@ -12,9 +12,93 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.browser.customtabs.CustomTabsIntent
+import com.antigravity.go.util.AppLogger
+
+object WebNavigationHelper {
+    fun openUrlSafely(context: Context, url: String, mainWebView: WebView? = null): Boolean {
+        AppLogger.i("Navigation", "openUrlSafely: $url")
+        return try {
+            val uri = Uri.parse(url)
+            val scheme = uri.scheme?.lowercase() ?: ""
+            val host = uri.host?.lowercase() ?: ""
+
+            // Ignore non-navigable or pseudo schemes
+            if (scheme == "javascript" || scheme == "about" || scheme == "data") {
+                AppLogger.d("Navigation", "Ignored non-navigable scheme: $scheme")
+                return false
+            }
+
+            // Handle intent:// schemes
+            if (scheme == "intent") {
+                return try {
+                    val parsedIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(parsedIntent)
+                    AppLogger.i("Navigation", "Successfully launched intent:// scheme")
+                    true
+                } catch (e: Exception) {
+                    AppLogger.w("Navigation", "Failed to launch intent:// scheme: ${e.message}")
+                    false
+                }
+            }
+
+            val isInternalDomain = host.endsWith("antigravity.google.com") ||
+                    host.endsWith("google.com") ||
+                    host.endsWith("googleusercontent.com") ||
+                    host.endsWith("gstatic.com") ||
+                    host == "localhost" ||
+                    host == "10.0.2.2" ||
+                    host.startsWith("192.168.")
+
+            if (isInternalDomain && mainWebView != null) {
+                AppLogger.i("Navigation", "Loading internal URL in container WebView: $url")
+                mainWebView.loadUrl(url)
+                true
+            } else if (scheme == "http" || scheme == "https") {
+                AppLogger.i("Navigation", "Opening external URL via Custom Tabs / Browser: $url")
+                try {
+                    val customTabsIntent = CustomTabsIntent.Builder()
+                        .setShowTitle(true)
+                        .build()
+                    customTabsIntent.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    customTabsIntent.launchUrl(context, uri)
+                    true
+                } catch (e: Exception) {
+                    AppLogger.w("Navigation", "CustomTabs failed (${e.message}), falling back to ACTION_VIEW with NEW_TASK")
+                    try {
+                        val browserIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(browserIntent)
+                        true
+                    } catch (ex: Exception) {
+                        AppLogger.e("Navigation", "Could not open browser intent: ${ex.message}", ex)
+                        false
+                    }
+                }
+            } else {
+                try {
+                    val genericIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(genericIntent)
+                    true
+                } catch (ex: Exception) {
+                    AppLogger.e("Navigation", "Could not open URI scheme '$scheme': ${ex.message}", ex)
+                    false
+                }
+            }
+        } catch (t: Throwable) {
+            AppLogger.e("Navigation", "Fatal error in openUrlSafely: ${t.message}", t)
+            false
+        }
+    }
+}
 
 class AntigravityWebChromeClient(
     private val onProgressUpdate: (Float) -> Unit,
@@ -29,7 +113,10 @@ class AntigravityWebChromeClient(
 
     override fun onReceivedTitle(view: WebView?, title: String?) {
         super.onReceivedTitle(view, title)
-        title?.let { onTitleReceived(it) }
+        title?.let {
+            AppLogger.d("WebChromeClient", "Title: $it")
+            onTitleReceived(it)
+        }
     }
 
     override fun onShowFileChooser(
@@ -37,11 +124,12 @@ class AntigravityWebChromeClient(
         filePathCallback: ValueCallback<Array<Uri>>?,
         fileChooserParams: FileChooserParams?
     ): Boolean {
+        AppLogger.i("WebChromeClient", "onShowFileChooser triggered")
         return onFileChooser(filePathCallback, fileChooserParams)
     }
 
     override fun onPermissionRequest(request: PermissionRequest?) {
-        // Grant permissions for camera/mic/protected media if requested by the web app
+        AppLogger.i("WebChromeClient", "Granting web permissions: ${request?.resources?.joinToString()}")
         request?.grant(request.resources)
     }
 
@@ -51,14 +139,59 @@ class AntigravityWebChromeClient(
         isUserGesture: Boolean,
         resultMsg: Message?
     ): Boolean {
-        // Handle window.open by redirecting to the main WebView instance
-        val transport = resultMsg?.obj as? WebView.WebViewTransport
-        transport?.webView = view
-        resultMsg?.sendToTarget()
-        return true
+        if (view == null || resultMsg == null) return false
+        AppLogger.i("WebChromeClient", "onCreateWindow (isDialog=$isDialog, isUserGesture=$isUserGesture)")
+
+        // 1. If user tapped a link with target="_blank", hitTestResult gives the target URL directly
+        val hitTest = view.hitTestResult
+        val directUrl = hitTest.extra
+        if (!directUrl.isNullOrBlank()) {
+            AppLogger.i("WebChromeClient", "onCreateWindow: direct hitTest URL resolved: $directUrl")
+            WebNavigationHelper.openUrlSafely(view.context, directUrl, view)
+            return false
+        }
+
+        // 2. Otherwise create a temporary WebView to capture script window.open navigation safely
+        val ctx = view.context
+        val tempWebView = WebView(ctx).apply {
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(v: WebView?, request: WebResourceRequest?): Boolean {
+                    val targetUrl = request?.url?.toString()
+                    if (!targetUrl.isNullOrBlank()) {
+                        AppLogger.i("WebChromeClient", "onCreateWindow: captured URL from tempWebView: $targetUrl")
+                        WebNavigationHelper.openUrlSafely(ctx, targetUrl, view)
+                    }
+                    v?.destroy()
+                    return true
+                }
+
+                @Deprecated("Deprecated in Java")
+                override fun shouldOverrideUrlLoading(v: WebView?, targetUrl: String?): Boolean {
+                    if (!targetUrl.isNullOrBlank()) {
+                        AppLogger.i("WebChromeClient", "onCreateWindow: captured URL from tempWebView: $targetUrl")
+                        WebNavigationHelper.openUrlSafely(ctx, targetUrl, view)
+                    }
+                    v?.destroy()
+                    return true
+                }
+            }
+        }
+
+        val transport = resultMsg.obj as? WebView.WebViewTransport
+        if (transport != null) {
+            transport.webView = tempWebView
+            resultMsg.sendToTarget()
+            return true
+        }
+        return false
     }
 
     override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+        if (consoleMessage != null) {
+            val level = consoleMessage.messageLevel()?.name ?: "LOG"
+            val msg = "${consoleMessage.message()} (${consoleMessage.sourceId()}:${consoleMessage.lineNumber()})"
+            AppLogger.log("WEB/$level", msg)
+        }
         return super.onConsoleMessage(consoleMessage)
     }
 }
@@ -73,10 +206,15 @@ class AntigravityWebViewClient(
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
         val url = request?.url?.toString() ?: return false
+        AppLogger.d("WebViewClient", "shouldOverrideUrlLoading: $url")
         val uri = Uri.parse(url)
         val host = uri.host?.lowercase() ?: ""
+        val scheme = uri.scheme?.lowercase() ?: ""
 
-        // Domains that should stay within the Antigravity container
+        if (scheme == "javascript" || scheme == "about" || scheme == "data") {
+            return false
+        }
+
         val isInternalDomain = host.endsWith("antigravity.google.com") ||
                 host.endsWith("google.com") ||
                 host.endsWith("googleusercontent.com") ||
@@ -86,25 +224,10 @@ class AntigravityWebViewClient(
                 host.startsWith("192.168.")
 
         return if (isInternalDomain) {
-            // Stay inside web container
             false
         } else {
-            // Open external links (e.g. GitHub repos, external docs, third-party OAuth) via Chrome Custom Tab
-            try {
-                val customTabsIntent = CustomTabsIntent.Builder()
-                    .setShowTitle(true)
-                    .build()
-                customTabsIntent.launchUrl(context, uri)
-                true
-            } catch (e: Exception) {
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW, uri)
-                    context.startActivity(intent)
-                    true
-                } catch (ex: Exception) {
-                    false
-                }
-            }
+            WebNavigationHelper.openUrlSafely(context, url, view)
+            true
         }
     }
 
@@ -114,17 +237,20 @@ class AntigravityWebViewClient(
      * By calling resend.sendToTarget(), we instruct Chromium to resend the form data.
      */
     override fun onFormResubmission(view: WebView?, dontResend: Message?, resend: Message?) {
+        AppLogger.i("WebViewClient", "Form resubmission handled for Google OAuth")
         resend?.sendToTarget()
     }
 
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
+        AppLogger.i("WebViewClient", "Page started: $url")
         url?.let { onPageStartedCallback(it) }
         view?.let { onHistoryUpdate(it.canGoBack(), it.canGoForward()) }
     }
 
     override fun onPageFinished(view: WebView?, url: String?) {
         super.onPageFinished(view, url)
+        AppLogger.i("WebViewClient", "Page finished: $url")
         url?.let { onPageFinishedCallback(it) }
         view?.let { onHistoryUpdate(it.canGoBack(), it.canGoForward()) }
 
@@ -156,7 +282,23 @@ class AntigravityWebViewClient(
         super.onReceivedError(view, request, error)
         if (request?.isForMainFrame == true) {
             val desc = error?.description?.toString() ?: ""
+            val code = error?.errorCode ?: 0
+            val failingUrl = request.url?.toString() ?: ""
+            AppLogger.e("WebViewClient", "onReceivedError (code=$code): $desc for $failingUrl")
             onErrorCallback(desc.ifEmpty { "Network error connecting to Antigravity" })
+        }
+    }
+
+    override fun onReceivedHttpError(
+        view: WebView?,
+        request: WebResourceRequest?,
+        errorResponse: WebResourceResponse?
+    ) {
+        super.onReceivedHttpError(view, request, errorResponse)
+        val status = errorResponse?.statusCode ?: 0
+        val failingUrl = request?.url?.toString() ?: ""
+        if (request?.isForMainFrame == true || status >= 400) {
+            AppLogger.w("WebViewClient", "HTTP Error $status for $failingUrl")
         }
     }
 }

@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.antigravity.go.util.AppLogger
 import com.antigravity.go.web.WebContainerState
 
 @Composable
@@ -35,6 +38,8 @@ fun SettingsDialog(
     onPromptAccountPicker: () -> Unit
 ) {
     var urlInput by remember { mutableStateOf(currentUrl) }
+    var showLogViewer by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -46,7 +51,9 @@ fun SettingsDialog(
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
@@ -81,7 +88,7 @@ fun SettingsDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Google Account",
@@ -107,7 +114,7 @@ fun SettingsDialog(
                     Text(if (selectedAccount.isNullOrBlank()) "Sign In with Device Account" else "Switch Device Account")
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Storage & Session",
@@ -125,10 +132,25 @@ fun SettingsDialog(
                     Text("Clear Web Cache & Reload")
                 }
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Diagnostics & Logs",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                OutlinedButton(
+                    onClick = { showLogViewer = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Collect & View Logs (${AppLogger.getLogCount()} lines)")
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Antigravity Go Beta v0.0.2",
+                    text = "Antigravity Go Beta v0.0.3",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -152,4 +174,10 @@ fun SettingsDialog(
             }
         }
     )
+
+    if (showLogViewer) {
+        LogViewerDialog(
+            onDismiss = { showLogViewer = false }
+        )
+    }
 }

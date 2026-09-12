@@ -82,10 +82,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlin.math.roundToInt
 import com.antigravity.go.theme.AntigravityBlue
+import com.antigravity.go.util.AppLogger
 import com.antigravity.go.web.AntigravityWebChromeClient
 import com.antigravity.go.web.AntigravityWebViewClient
 import com.antigravity.go.web.UserAgentHelper
 import com.antigravity.go.web.WebContainerState
+import com.antigravity.go.web.WebNavigationHelper
 
 @Composable
 fun ContainerScreen(
@@ -357,12 +359,7 @@ fun ContainerScreen(
                             Button(
                                 onClick = {
                                     val target = webViewInstance?.url ?: currentUrl
-                                    try {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(target))
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
-                                    }
+                                    WebNavigationHelper.openUrlSafely(context, target)
                                 },
                                 modifier = Modifier.weight(1.4f)
                             ) {
@@ -456,12 +453,7 @@ fun ContainerScreen(
                         onClick = {
                             showQuickMenu = false
                             val urlToOpen = webViewInstance?.url ?: currentUrl
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen))
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
-                            }
+                            WebNavigationHelper.openUrlSafely(context, urlToOpen)
                         }
                     )
 

@@ -1,7 +1,7 @@
-# Antigravity Go (Android Web Interface Container) - Beta v0.0.2
+# Antigravity Go (Android Web Interface Container) - Beta v0.0.3
 
 [![GitHub Release](https://img.shields.io/github/v/release/SuperDadofThree/anti-gravity-go?include_prereleases&label=release)](https://github.com/SuperDadofThree/anti-gravity-go/releases)
-[![Download APK](https://img.shields.io/badge/Download-AntigravityGo--v0.0.2--beta.apk-blue?logo=android)](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.2-beta/AntigravityGo-v0.0.2-beta.apk)
+[![Download APK](https://img.shields.io/badge/Download-AntigravityGo--v0.0.3--beta.apk-blue?logo=android)](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.3-beta/AntigravityGo-v0.0.3-beta.apk)
 
 **Antigravity Go** (`com.antigravity.go`) is a native Android application container for [antigravity.google.com](https://antigravity.google.com). It provides a full-screen, app-style experience optimized for Android phones with developer productivity tools.
 
@@ -10,20 +10,26 @@
 ## 📥 Direct Download
 
 You can download the compiled APK directly to your Android device from the Releases page:
-- **[Download AntigravityGo-v0.0.2-beta.apk](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.2-beta/AntigravityGo-v0.0.2-beta.apk)** *(12.1 MB)*
-- **[View GitHub Release v0.0.2-beta](https://github.com/SuperDadofThree/anti-gravity-go/releases/tag/v0.0.2-beta)**
+- **[Download AntigravityGo-v0.0.3-beta.apk](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.3-beta/AntigravityGo-v0.0.3-beta.apk)** *(12.1 MB)*
+- **[View GitHub Release v0.0.3-beta](https://github.com/SuperDadofThree/anti-gravity-go/releases/tag/v0.0.3-beta)**
 
 ---
 
 ## 📱 Features
 
 - **App-Style Launching & Full-Screen Immersion**: Launches directly from the home screen as an installed app. Removes browser URL bars, tab switchers, and clutter to maximize coding and chat canvas space.
-- **Google Sign-In & OAuth Safe**: Eliminates Google OAuth `403: disallowed_useragent` blocks by utilizing a clean modern Chrome User-Agent and Chrome Custom Tabs fallback.
+- **Robust URL & Window Handling (Crash-Proof)**:
+  - Fixed crashes when tapping links opening in new windows/tabs (`target="_blank"` or `window.open`).
+  - Safe URL dispatching: internal Antigravity and Google links stay inside the app; external links open safely in Custom Tabs or external browser with `FLAG_ACTIVITY_NEW_TASK`.
+- **Integrated Diagnostics & Log Collection**:
+  - **In-App Log Console**: Access via **Settings (`⚙`) → Collect & View Logs**.
+  - **Live Capture**: Captures page navigation, Web Chrome console messages (`console.log`, `console.warn`, `console.error`), network failures, and uncaught crash traces.
+  - **One-Tap Actions**: Copy full logs to clipboard, share logs via Android's share sheet, or dump device system `logcat`.
 - **Draggable Floating Action Bubble (`✦`)**:
   - The quick menu trigger bubble can be dragged and repositioned anywhere around your phone screen so it never obstructs code, chat input, or buttons.
   - Automatically constrained within screen bounds so it never gets lost.
 - **Redesigned & Enlarged Quick Menu**:
-  - Significantly larger tap targets (48dp+ buttons) with modern elevated card styling.
+  - Large tap targets (48dp+ buttons) with modern elevated card styling.
   - **Desktop / Mobile Mode Toggle**: Instantly switch between mobile responsive view and full desktop view.
   - **Home / Reload**: Quickly reload the Antigravity session.
   - **Open in External Browser**: One-tap fallback to external Chrome/system browser.
@@ -39,13 +45,13 @@ You can download the compiled APK directly to your Android device from the Relea
 ## 🚀 Installation on Android Phone
 
 The compiled APK is ready in the project root:
-- `AntigravityGo-v0.0.2-beta.apk` (12.1 MB)
+- `AntigravityGo-v0.0.3-beta.apk` (12.1 MB)
 - `AntigravityGo-debug.apk` (12.1 MB)
 
 ### Option 1: Install via ADB (USB / Wireless Debugging)
 If your Android phone is connected to your computer with USB Debugging enabled:
 ```powershell
-adb install -r AntigravityGo-v0.0.2-beta.apk
+adb install -r AntigravityGo-v0.0.3-beta.apk
 ```
 
 ### Option 2: Direct Sideloading (Transfer to Phone)
