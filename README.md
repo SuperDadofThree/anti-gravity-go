@@ -1,6 +1,17 @@
 # Antigravity Go (Android Web Interface Container) - Beta v0.0.1
 
+[![GitHub Release](https://img.shields.io/github/v/release/michaelstillings-hash/anti-gravity-go?include_prereleases&label=release)](https://github.com/michaelstillings-hash/anti-gravity-go/releases)
+[![Download APK](https://img.shields.io/badge/Download-AntigravityGo--v0.0.1--beta.apk-blue?logo=android)](https://github.com/michaelstillings-hash/anti-gravity-go/releases/download/v0.0.1-beta/AntigravityGo-v0.0.1-beta.apk)
+
 **Antigravity Go** (`com.antigravity.go`) is a native Android application container for [antigravity.google.com](https://antigravity.google.com). It provides a full-screen, app-style experience optimized for Android phones with developer productivity tools.
+
+---
+
+## 📥 Direct Download
+
+You can download the compiled APK directly to your Android device from the Releases page:
+- **[Download AntigravityGo-v0.0.1-beta.apk](https://github.com/michaelstillings-hash/anti-gravity-go/releases/download/v0.0.1-beta/AntigravityGo-v0.0.1-beta.apk)** *(12.1 MB)*
+- **[View GitHub Release v0.0.1-beta](https://github.com/michaelstillings-hash/anti-gravity-go/releases/tag/v0.0.1-beta)**
 
 ---
 
