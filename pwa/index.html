@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#12141A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Antigravity Go</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #12141A;
+      color: #E8EAED;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .container {
+      max-width: 440px;
+      width: 100%;
+      background: #1A1C23;
+      border: 1px solid #2E323B;
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    }
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #24D6F4, #4285F4, #A87FFB);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 900;
+      font-family: monospace;
+      color: #FFFFFF;
+      box-shadow: 0 0 24px rgba(66, 133, 244, 0.4);
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #FFFFFF;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(66, 133, 244, 0.15);
+      color: #8AB4F8;
+      border: 1px solid rgba(66, 133, 244, 0.3);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #9AA0A6;
+      margin-bottom: 24px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .btn-primary {
+      background: #4285F4;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #8AB4F8;
+      border: 1px solid #2E323B;
+    }
+    #install-btn {
+      display: none;
+      background: #34A853;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #5F6368;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="logo">AG</div>
+    <h1>Antigravity Go</h1>
+    <div class="badge">PWA WRAPPER • BETA v0.0.1</div>
+    <p>Launch Google Antigravity in an app-style window with your on-device Chrome Google session.</p>
+
+    <!-- PWA Install Button (Appears if browser supports installation) -->
+    <button id="install-btn" class="btn">📲 Install to Home Screen</button>
+
+    <a href="https://antigravity.google.com/" class="btn btn-primary" id="launch-link">Launch Antigravity</a>
+    <button class="btn btn-secondary" onclick="window.location.reload()">Refresh Session</button>
+
+    <div class="footer">Antigravity Go Container</div>
+  </div>
+
+  <script>
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Antigravity Go Service Worker registered.'))
+        .catch((err) => console.error('Service Worker registration failed:', err));
+    }
+
+    // Handle PWA Installation prompt
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+
+    // Auto-launch if already running in standalone PWA mode
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      window.location.replace('https://antigravity.google.com/');
+    }
+  </script>
+</body>
+</html>

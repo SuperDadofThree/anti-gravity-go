@@ -1,0 +1,25 @@
+{
+  "name": "Antigravity Go",
+  "short_name": "AG Go",
+  "description": "Progressive Web App wrapper for Google Antigravity",
+  "start_url": "https://antigravity.google.com/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#12141A",
+  "theme_color": "#12141A",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
