@@ -93,7 +93,7 @@ fun ContainerScreen(
         mutableStateOf(sharedPrefs.getBoolean(WebContainerState.KEY_DESKTOP_MODE, false))
     }
     var isDevBarVisible by remember {
-        mutableStateOf(sharedPrefs.getBoolean(WebContainerState.KEY_DEV_BAR, true))
+        mutableStateOf(sharedPrefs.getBoolean(WebContainerState.KEY_DEV_BAR, false))
     }
     var zoomPercent by remember {
         mutableStateOf(sharedPrefs.getInt(WebContainerState.KEY_ZOOM_PERCENT, 100))
