@@ -156,13 +156,6 @@ class AntigravityWebViewClient(
         super.onReceivedError(view, request, error)
         if (request?.isForMainFrame == true) {
             val desc = error?.description?.toString() ?: ""
-            // Gracefully recover from ERR_CACHE_MISS by directly issuing a fresh GET request to the target URL
-            if (desc.contains("ERR_CACHE_MISS", ignoreCase = true)) {
-                view?.post {
-                    view.loadUrl(request.url.toString())
-                }
-                return
-            }
             onErrorCallback(desc.ifEmpty { "Network error connecting to Antigravity" })
         }
     }
