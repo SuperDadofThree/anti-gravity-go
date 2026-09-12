@@ -128,7 +128,7 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Antigravity Go Beta v0.0.1",
+                    text = "Antigravity Go Beta v0.0.2",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

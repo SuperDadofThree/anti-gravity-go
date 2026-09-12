@@ -1,7 +1,7 @@
-# Antigravity Go (Android Web Interface Container) - Beta v0.0.1
+# Antigravity Go (Android Web Interface Container) - Beta v0.0.2
 
 [![GitHub Release](https://img.shields.io/github/v/release/michaelstillings-hash/anti-gravity-go?include_prereleases&label=release)](https://github.com/michaelstillings-hash/anti-gravity-go/releases)
-[![Download APK](https://img.shields.io/badge/Download-AntigravityGo--v0.0.1--beta.apk-blue?logo=android)](https://github.com/michaelstillings-hash/anti-gravity-go/releases/download/v0.0.1-beta/AntigravityGo-v0.0.1-beta.apk)
+[![Download APK](https://img.shields.io/badge/Download-AntigravityGo--v0.0.2--beta.apk-blue?logo=android)](https://github.com/michaelstillings-hash/anti-gravity-go/releases/download/v0.0.2-beta/AntigravityGo-v0.0.2-beta.apk)
 
 **Antigravity Go** (`com.antigravity.go`) is a native Android application container for [antigravity.google.com](https://antigravity.google.com). It provides a full-screen, app-style experience optimized for Android phones with developer productivity tools.
 
@@ -10,8 +10,8 @@
 ## 📥 Direct Download
 
 You can download the compiled APK directly to your Android device from the Releases page:
-- **[Download AntigravityGo-v0.0.1-beta.apk](https://github.com/michaelstillings-hash/anti-gravity-go/releases/download/v0.0.1-beta/AntigravityGo-v0.0.1-beta.apk)** *(12.1 MB)*
-- **[View GitHub Release v0.0.1-beta](https://github.com/michaelstillings-hash/anti-gravity-go/releases/tag/v0.0.1-beta)**
+- **[Download AntigravityGo-v0.0.2-beta.apk](https://github.com/michaelstillings-hash/anti-gravity-go/releases/download/v0.0.2-beta/AntigravityGo-v0.0.2-beta.apk)** *(12.1 MB)*
+- **[View GitHub Release v0.0.2-beta](https://github.com/michaelstillings-hash/anti-gravity-go/releases/tag/v0.0.2-beta)**
 
 ---
 
@@ -19,13 +19,17 @@ You can download the compiled APK directly to your Android device from the Relea
 
 - **App-Style Launching & Full-Screen Immersion**: Launches directly from the home screen as an installed app. Removes browser URL bars, tab switchers, and clutter to maximize coding and chat canvas space.
 - **Google Sign-In & OAuth Safe**: Eliminates Google OAuth `403: disallowed_useragent` blocks by utilizing a clean modern Chrome User-Agent and Chrome Custom Tabs fallback.
-- **Floating Quick Menu (`✦`)**:
-  - **Desktop / Mobile Mode Toggle**: Instantly switch between mobile responsive view and full 1280px desktop view.
-  - **Text & Viewport Zoom**: Fine-grained zoom controls (`-`, `100%`, `+`) for comfortable reading of code, logs, and small web elements.
-  - **Developer Soft Key Bar (`</>`)**: One-tap toggle for on-screen coding keys (`ESC`, `TAB`, `CTRL+C`, `CTRL+V`, `CTRL+Z`, `←`, `→`, `↑`, `↓`, `/`, `\`, `{`, `}`, `[`, `]`, `|`, `~`, `` ` ``, `$`).
-  - **Endpoint Switcher**: Connect to `https://antigravity.google.com` or custom endpoints (e.g., local dev tunnels, Cloud Workstations, or `http://10.0.2.2:8080`).
-  - **Clear Cache & Storage**: One-tap web cache and cookie reset.
-  - **Version Badge**: Shows `Antigravity Go Beta v0.0.1`.
+- **Draggable Floating Action Bubble (`✦`)**:
+  - The quick menu trigger bubble can be dragged and repositioned anywhere around your phone screen so it never obstructs code, chat input, or buttons.
+  - Automatically constrained within screen bounds so it never gets lost.
+- **Redesigned & Enlarged Quick Menu**:
+  - Significantly larger tap targets (48dp+ buttons) with modern elevated card styling.
+  - **Desktop / Mobile Mode Toggle**: Instantly switch between mobile responsive view and full desktop view.
+  - **Home / Reload**: Quickly reload the Antigravity session.
+  - **Open in External Browser**: One-tap fallback to external Chrome/system browser.
+  - **Google Account Switcher**: Easily switch or log in with any device account.
+  - **Endpoint Switcher & Cache Control**: Connect to custom endpoints or clear web cache and cookies.
+  - **Tap-to-Dismiss Scrim**: Tap anywhere outside the menu to dismiss.
 - **Smart Back Navigation**: The Android system back gesture navigates backward through web page history. Pressing back on the root page prompts "Press back again to exit" to prevent accidental exits.
 - **File & Image Upload Support**: Native `WebChromeClient` file chooser integration allows attaching code files, logs, and screenshots directly from Android storage or camera.
 - **Android Download Manager Integration**: Downloads from the web interface save straight to Android's `/Download` directory with progress notifications.
@@ -35,13 +39,13 @@ You can download the compiled APK directly to your Android device from the Relea
 ## 🚀 Installation on Android Phone
 
 The compiled APK is ready in the project root:
-- `AntigravityGo-v0.0.1-beta.apk` (12.1 MB)
+- `AntigravityGo-v0.0.2-beta.apk` (12.1 MB)
 - `AntigravityGo-debug.apk` (12.1 MB)
 
 ### Option 1: Install via ADB (USB / Wireless Debugging)
 If your Android phone is connected to your computer with USB Debugging enabled:
 ```powershell
-adb install -r AntigravityGo-v0.0.1-beta.apk
+adb install -r AntigravityGo-v0.0.2-beta.apk
 ```
 
 ### Option 2: Direct Sideloading (Transfer to Phone)

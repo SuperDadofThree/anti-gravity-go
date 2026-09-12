@@ -21,8 +21,12 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +35,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -53,6 +58,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,14 +68,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlin.math.roundToInt
 import com.antigravity.go.theme.AntigravityBlue
 import com.antigravity.go.web.AntigravityWebChromeClient
 import com.antigravity.go.web.AntigravityWebViewClient
@@ -91,9 +102,6 @@ fun ContainerScreen(
     }
     var isDesktopMode by remember {
         mutableStateOf(sharedPrefs.getBoolean(WebContainerState.KEY_DESKTOP_MODE, false))
-    }
-    var isDevBarVisible by remember {
-        mutableStateOf(sharedPrefs.getBoolean(WebContainerState.KEY_DEV_BAR, false))
     }
     var zoomPercent by remember {
         mutableStateOf(sharedPrefs.getInt(WebContainerState.KEY_ZOOM_PERCENT, 100))
@@ -161,11 +169,26 @@ fun ContainerScreen(
         }
     }
 
-    Box(
+    var bubbleOffsetX by remember { mutableFloatStateOf(0f) }
+    var bubbleOffsetY by remember { mutableFloatStateOf(0f) }
+
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        val density = LocalDensity.current
+        val maxWidthPx = with(density) { maxWidth.toPx() }
+        val maxHeightPx = with(density) { maxHeight.toPx() }
+        val bubbleSizePx = with(density) { 56.dp.toPx() }
+        val marginEndPx = with(density) { 20.dp.toPx() }
+        val marginBottomPx = with(density) { 28.dp.toPx() }
+
+        val minOffsetX = -(maxWidthPx - marginEndPx - bubbleSizePx)
+        val maxOffsetX = marginEndPx
+        val minOffsetY = -(maxHeightPx - marginBottomPx - bubbleSizePx)
+        val maxOffsetY = marginBottomPx
+
         // Main Web View
         AndroidView(
             modifier = Modifier.fillMaxSize(),
@@ -357,181 +380,175 @@ fun ContainerScreen(
             }
         }
 
-        // Bottom UI Section: Developer Bar & Floating Controls
-        Column(
+        // Dimmed scrim when Quick Menu is open (tap to dismiss)
+        if (showQuickMenu) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { showQuickMenu = false }
+            )
+        }
+
+        // Enlarged Quick Control Menu (Floating Island)
+        AnimatedVisibility(
+            visible = showQuickMenu,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 96.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
-            // Quick Control Mini-Bar (Floating Island)
-            AnimatedVisibility(
-                visible = showQuickMenu,
-                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                tonalElevation = 12.dp,
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(16.dp, RoundedCornerShape(24.dp))
             ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    tonalElevation = 8.dp,
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(8.dp, RoundedCornerShape(16.dp))
+                        .padding(horizontal = 10.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Desktop/Mobile Mode Toggle
-                        QuickMenuButton(
-                            label = if (isDesktopMode) "Desktop" else "Mobile",
-                            sublabel = "Mode",
-                            isActive = isDesktopMode,
-                            onClick = {
-                                isDesktopMode = !isDesktopMode
-                                sharedPrefs.edit().putBoolean(WebContainerState.KEY_DESKTOP_MODE, isDesktopMode).apply()
-                                webViewInstance?.let { wv ->
-                                    UserAgentHelper.applyUserAgent(wv.settings, isDesktopMode)
-                                    wv.reload()
-                                }
+                    // 1. Desktop/Mobile Mode Toggle
+                    QuickMenuButton(
+                        icon = if (isDesktopMode) "🖥" else "📱",
+                        label = if (isDesktopMode) "Desktop" else "Mobile",
+                        sublabel = "Mode",
+                        isActive = isDesktopMode,
+                        onClick = {
+                            isDesktopMode = !isDesktopMode
+                            sharedPrefs.edit().putBoolean(WebContainerState.KEY_DESKTOP_MODE, isDesktopMode).apply()
+                            webViewInstance?.let { wv ->
+                                UserAgentHelper.applyUserAgent(wv.settings, isDesktopMode)
+                                wv.reload()
                             }
-                        )
+                        }
+                    )
 
-                        // Zoom Minus
-                        QuickMenuButton(
-                            label = "-",
-                            sublabel = "Zoom",
-                            onClick = {
-                                if (zoomPercent > 60) {
-                                    zoomPercent -= 15
-                                    sharedPrefs.edit().putInt(WebContainerState.KEY_ZOOM_PERCENT, zoomPercent).apply()
-                                    webViewInstance?.settings?.textZoom = zoomPercent
-                                }
-                            }
-                        )
+                    // 2. Home Button
+                    QuickMenuButton(
+                        icon = "⌂",
+                        label = "Home",
+                        sublabel = "Reload",
+                        onClick = {
+                            showQuickMenu = false
+                            webViewInstance?.loadUrl(currentUrl)
+                        }
+                    )
 
-                        // Current Zoom / Reset
-                        QuickMenuButton(
-                            label = "$zoomPercent%",
-                            sublabel = "Reset",
-                            onClick = {
-                                zoomPercent = 100
-                                sharedPrefs.edit().putInt(WebContainerState.KEY_ZOOM_PERCENT, zoomPercent).apply()
-                                webViewInstance?.settings?.textZoom = 100
+                    // 3. Open in External Browser
+                    QuickMenuButton(
+                        icon = "↗",
+                        label = "Browser",
+                        sublabel = "External",
+                        onClick = {
+                            showQuickMenu = false
+                            val urlToOpen = webViewInstance?.url ?: currentUrl
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
                             }
-                        )
+                        }
+                    )
 
-                        // Zoom Plus
-                        QuickMenuButton(
-                            label = "+",
-                            sublabel = "Zoom",
-                            onClick = {
-                                if (zoomPercent < 200) {
-                                    zoomPercent += 15
-                                    sharedPrefs.edit().putInt(WebContainerState.KEY_ZOOM_PERCENT, zoomPercent).apply()
-                                    webViewInstance?.settings?.textZoom = zoomPercent
-                                }
+                    // 4. Google Account Picker
+                    QuickMenuButton(
+                        icon = "👤",
+                        label = if (selectedGoogleAccount != null) "Account" else "Sign In",
+                        sublabel = if (selectedGoogleAccount != null) {
+                            val name = selectedGoogleAccount!!.substringBefore("@")
+                            if (name.length > 7) name.take(6) + "…" else name
+                        } else "Google",
+                        isActive = selectedGoogleAccount != null,
+                        onClick = {
+                            showQuickMenu = false
+                            onRequestAccountPicker { email ->
+                                navigateToGoogleAccount(email)
                             }
-                        )
+                        }
+                    )
 
-                        // Toggle Dev Soft Key Bar
-                        QuickMenuButton(
-                            label = "</>",
-                            sublabel = "Keys",
-                            isActive = isDevBarVisible,
-                            onClick = {
-                                isDevBarVisible = !isDevBarVisible
-                                sharedPrefs.edit().putBoolean(WebContainerState.KEY_DEV_BAR, isDevBarVisible).apply()
-                            }
-                        )
-
-                        // Home Button
-                        QuickMenuButton(
-                            label = "⌂",
-                            sublabel = "Home",
-                            onClick = {
-                                showQuickMenu = false
-                                webViewInstance?.loadUrl(currentUrl)
-                            }
-                        )
-
-                        // Open in Browser
-                        QuickMenuButton(
-                            label = "↗",
-                            sublabel = "Browser",
-                            onClick = {
-                                showQuickMenu = false
-                                val urlToOpen = webViewInstance?.url ?: currentUrl
-                                try {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlToOpen))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        )
-
-                        // Google Account Picker
-                        QuickMenuButton(
-                            label = "👤",
-                            sublabel = if (selectedGoogleAccount != null) "Account" else "Login",
-                            isActive = selectedGoogleAccount != null,
-                            onClick = {
-                                showQuickMenu = false
-                                onRequestAccountPicker { email ->
-                                    navigateToGoogleAccount(email)
-                                }
-                            }
-                        )
-
-                        // Settings / URL Dialog
-                        QuickMenuButton(
-                            label = "⚙",
-                            sublabel = "Config",
-                            onClick = {
-                                showSettingsDialog = true
-                                showQuickMenu = false
-                            }
-                        )
-                    }
+                    // 5. Settings / Endpoint Dialog
+                    QuickMenuButton(
+                        icon = "⚙",
+                        label = "Settings",
+                        sublabel = "Config",
+                        onClick = {
+                            showSettingsDialog = true
+                            showQuickMenu = false
+                        }
+                    )
                 }
-            }
-
-            // Developer Soft Keys Row (Esc, Tab, Ctrl, Alt, Braces, Arrows)
-            AnimatedVisibility(
-                visible = isDevBarVisible,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it })
-            ) {
-                DeveloperKeyBar(webView = webViewInstance)
             }
         }
 
-        // Floating Action Trigger (Menu Button bottom right)
-        FloatingActionButton(
-            onClick = { showQuickMenu = !showQuickMenu },
+        // Draggable Floating Action Bubble
+        Surface(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(
-                    end = 16.dp,
-                    bottom = if (isDevBarVisible) 56.dp else 24.dp
-                )
+                .offset { IntOffset(bubbleOffsetX.roundToInt(), bubbleOffsetY.roundToInt()) }
+                .padding(end = 20.dp, bottom = 28.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars)
-                .size(44.dp),
+                .size(56.dp)
+                .shadow(10.dp, CircleShape)
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        var isDrag = false
+                        var totalDistance = 0f
+                        val touchSlop = viewConfiguration.touchSlop
+
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                if (!isDrag) {
+                                    showQuickMenu = !showQuickMenu
+                                }
+                                break
+                            }
+                            val delta = change.positionChange()
+                            totalDistance += kotlin.math.hypot(delta.x, delta.y)
+                            if (!isDrag && totalDistance > touchSlop) {
+                                isDrag = true
+                            }
+                            if (isDrag) {
+                                change.consume()
+                                bubbleOffsetX = (bubbleOffsetX + delta.x).coerceIn(minOffsetX, maxOffsetX)
+                                bubbleOffsetY = (bubbleOffsetY + delta.y).coerceIn(minOffsetY, maxOffsetY)
+                            }
+                        }
+                    }
+                },
             shape = CircleShape,
-            containerColor = if (showQuickMenu) AntigravityBlue else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f),
-            contentColor = if (showQuickMenu) Color.White else MaterialTheme.colorScheme.onSurface,
-            elevation = FloatingActionButtonDefaults.elevation(4.dp)
+            color = if (showQuickMenu) AntigravityBlue else MaterialTheme.colorScheme.surfaceVariant,
+            tonalElevation = 6.dp
         ) {
-            Text(
-                text = if (showQuickMenu) "✕" else "✦",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (showQuickMenu) "✕" else "✦",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (showQuickMenu) Color.White else MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 
@@ -563,6 +580,7 @@ fun ContainerScreen(
 
 @Composable
 private fun QuickMenuButton(
+    icon: String,
     label: String,
     sublabel: String,
     isActive: Boolean = false,
@@ -570,32 +588,37 @@ private fun QuickMenuButton(
 ) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 6.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(6.dp))
+                .size(48.dp)
+                .clip(RoundedCornerShape(14.dp))
                 .background(
                     if (isActive) AntigravityBlue else MaterialTheme.colorScheme.surface
                 ),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = label,
-                fontSize = 12.sp,
+                text = icon,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
                 color = if (isActive) Color.White else MaterialTheme.colorScheme.onSurface
             )
         }
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
         Text(
             text = sublabel,
-            fontSize = 9.sp,
+            fontSize = 10.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
