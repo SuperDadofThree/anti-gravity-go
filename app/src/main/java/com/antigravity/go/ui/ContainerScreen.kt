@@ -191,9 +191,11 @@ fun ContainerScreen(
         val minOffsetY = -(maxHeightPx - marginBottomPx - bubbleSizePx)
         val maxOffsetY = marginBottomPx
 
-        // Main Web View
+        // Main Web View lowered cleanly below the clock
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars),
             factory = { ctx ->
                 WebView(ctx).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -288,7 +290,7 @@ fun ContainerScreen(
             }
         )
 
-        // Loading Progress Bar at top
+        // Loading Progress Bar directly below status bar
         AnimatedVisibility(
             visible = isLoading,
             enter = fadeIn(),
@@ -307,8 +309,6 @@ fun ContainerScreen(
                 trackColor = Color.Transparent
             )
         }
-
-        // Error State Card (when connection fails)
         errorMessage?.let { err ->
             Box(
                 modifier = Modifier

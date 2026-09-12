@@ -1,7 +1,7 @@
-# Antigravity Go (Android Web Interface Container) - Beta v0.0.3
+# Antigravity Go (Android Web Interface Container) - Beta v0.0.4
 
 [![GitHub Release](https://img.shields.io/github/v/release/SuperDadofThree/anti-gravity-go?include_prereleases&label=release)](https://github.com/SuperDadofThree/anti-gravity-go/releases)
-[![Download APK](https://img.shields.io/badge/Download-AntigravityGo--v0.0.3--beta.apk-blue?logo=android)](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.3-beta/AntigravityGo-v0.0.3-beta.apk)
+[![Download APK](https://img.shields.io/badge/Download-AntigravityGo--v0.0.4--beta.apk-blue?logo=android)](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.4-beta/AntigravityGo-v0.0.4-beta.apk)
 
 **Antigravity Go** (`com.antigravity.go`) is a native Android application container for [antigravity.google.com](https://antigravity.google.com). It provides a full-screen, app-style experience optimized for Android phones with developer productivity tools.
 
@@ -10,14 +10,16 @@
 ## 📥 Direct Download
 
 You can download the compiled APK directly to your Android device from the Releases page:
-- **[Download AntigravityGo-v0.0.3-beta.apk](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.3-beta/AntigravityGo-v0.0.3-beta.apk)** *(12.1 MB)*
-- **[View GitHub Release v0.0.3-beta](https://github.com/SuperDadofThree/anti-gravity-go/releases/tag/v0.0.3-beta)**
+- **[Download AntigravityGo-v0.0.4-beta.apk](https://github.com/SuperDadofThree/anti-gravity-go/releases/download/v0.0.4-beta/AntigravityGo-v0.0.4-beta.apk)** *(12.1 MB)*
+- **[View GitHub Release v0.0.4-beta](https://github.com/SuperDadofThree/anti-gravity-go/releases/tag/v0.0.4-beta)**
 
 ---
 
 ## 📱 Features
 
-- **App-Style Launching & Full-Screen Immersion**: Launches directly from the home screen as an installed app. Removes browser URL bars, tab switchers, and clutter to maximize coding and chat canvas space.
+- **App-Style Immersion & Top UI Reachability**:
+  - The top status bar (system clock, battery, Wi-Fi) is clearly visible with clean, high-contrast light icons.
+  - The web interface is lowered cleanly below the status bar so you can effortlessly tap all top navigation elements (model selector, project titles, hamburger menus, tabs) without obstruction from camera notches or the clock.
 - **Robust URL & Window Handling (Crash-Proof)**:
   - Fixed crashes when tapping links opening in new windows/tabs (`target="_blank"` or `window.open`).
   - Safe URL dispatching: internal Antigravity and Google links stay inside the app; external links open safely in Custom Tabs or external browser with `FLAG_ACTIVITY_NEW_TASK`.

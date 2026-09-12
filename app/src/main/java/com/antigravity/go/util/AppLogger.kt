@@ -29,7 +29,7 @@ object AppLogger {
         isInitialized = true
 
         val appContext = context.applicationContext
-        log("INIT", "=== Antigravity Go v0.0.3-beta Log Session ===")
+        log("INIT", "=== Antigravity Go v0.0.4-beta Log Session ===")
         log("INIT", "Device: ${Build.MANUFACTURER} ${Build.MODEL} (${Build.PRODUCT})")
         log("INIT", "Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
         log("INIT", "Build ID: ${Build.DISPLAY}")

@@ -11,8 +11,8 @@ android {
         applicationId = "com.antigravity.go"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.0.3-beta"
+        versionCode = 4
+        versionName = "0.0.4-beta"
     }
 
     buildTypes {
